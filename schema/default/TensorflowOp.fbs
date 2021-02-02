@@ -304,3 +304,8 @@ table TensorArray {
     element_shape:[int];
     T:DataType=DT_FLOAT;
 }
+table Spectral {
+    Treal:DataType;
+    Tcomplex:DataType;
+    fft_length:int;
+}

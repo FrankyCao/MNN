@@ -121,6 +121,9 @@ struct RandomUniformT;
 struct TensorArray;
 struct TensorArrayT;
 
+struct Spectral;
+struct SpectralT;
+
 inline const flatbuffers::TypeTable *BinaryOpTypeTable();
 
 inline const flatbuffers::TypeTable *PackParamTypeTable();
@@ -194,6 +197,8 @@ inline const flatbuffers::TypeTable *LayerNormTypeTable();
 inline const flatbuffers::TypeTable *RandomUniformTypeTable();
 
 inline const flatbuffers::TypeTable *TensorArrayTypeTable();
+
+inline const flatbuffers::TypeTable *SpectralTypeTable();
 
 enum BinaryOpOperation {
   BinaryOpOperation_ADD = 0,
@@ -3583,6 +3588,87 @@ inline flatbuffers::Offset<TensorArray> CreateTensorArrayDirect(
 
 flatbuffers::Offset<TensorArray> CreateTensorArray(flatbuffers::FlatBufferBuilder &_fbb, const TensorArrayT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct SpectralT : public flatbuffers::NativeTable {
+  typedef Spectral TableType;
+  DataType Treal;
+  DataType Tcomplex;
+  int32_t fft_length;
+  SpectralT()
+      : Treal(DataType_DT_INVALID),
+        Tcomplex(DataType_DT_INVALID),
+        fft_length(0) {
+  }
+};
+
+struct Spectral FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SpectralT NativeTableType;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SpectralTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TREAL = 4,
+    VT_TCOMPLEX = 6,
+    VT_FFT_LENGTH = 8
+  };
+  DataType Treal() const {
+    return static_cast<DataType>(GetField<int32_t>(VT_TREAL, 0));
+  }
+  DataType Tcomplex() const {
+    return static_cast<DataType>(GetField<int32_t>(VT_TCOMPLEX, 0));
+  }
+  int32_t fft_length() const {
+    return GetField<int32_t>(VT_FFT_LENGTH, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_TREAL) &&
+           VerifyField<int32_t>(verifier, VT_TCOMPLEX) &&
+           VerifyField<int32_t>(verifier, VT_FFT_LENGTH) &&
+           verifier.EndTable();
+  }
+  SpectralT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(SpectralT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static flatbuffers::Offset<Spectral> Pack(flatbuffers::FlatBufferBuilder &_fbb, const SpectralT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct SpectralBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_Treal(DataType Treal) {
+    fbb_.AddElement<int32_t>(Spectral::VT_TREAL, static_cast<int32_t>(Treal), 0);
+  }
+  void add_Tcomplex(DataType Tcomplex) {
+    fbb_.AddElement<int32_t>(Spectral::VT_TCOMPLEX, static_cast<int32_t>(Tcomplex), 0);
+  }
+  void add_fft_length(int32_t fft_length) {
+    fbb_.AddElement<int32_t>(Spectral::VT_FFT_LENGTH, fft_length, 0);
+  }
+  explicit SpectralBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  SpectralBuilder &operator=(const SpectralBuilder &);
+  flatbuffers::Offset<Spectral> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Spectral>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Spectral> CreateSpectral(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    DataType Treal = DataType_DT_INVALID,
+    DataType Tcomplex = DataType_DT_INVALID,
+    int32_t fft_length = 0) {
+  SpectralBuilder builder_(_fbb);
+  builder_.add_fft_length(fft_length);
+  builder_.add_Tcomplex(Tcomplex);
+  builder_.add_Treal(Treal);
+  return builder_.Finish();
+}
+
+flatbuffers::Offset<Spectral> CreateSpectral(flatbuffers::FlatBufferBuilder &_fbb, const SpectralT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline BinaryOpT *BinaryOp::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
   auto _o = new BinaryOpT();
   UnPackTo(_o, _resolver);
@@ -4740,6 +4826,38 @@ inline flatbuffers::Offset<TensorArray> CreateTensorArray(flatbuffers::FlatBuffe
       _T);
 }
 
+inline SpectralT *Spectral::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = new SpectralT();
+  UnPackTo(_o, _resolver);
+  return _o;
+}
+
+inline void Spectral::UnPackTo(SpectralT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = Treal(); _o->Treal = _e; };
+  { auto _e = Tcomplex(); _o->Tcomplex = _e; };
+  { auto _e = fft_length(); _o->fft_length = _e; };
+}
+
+inline flatbuffers::Offset<Spectral> Spectral::Pack(flatbuffers::FlatBufferBuilder &_fbb, const SpectralT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateSpectral(_fbb, _o, _rehasher);
+}
+
+inline flatbuffers::Offset<Spectral> CreateSpectral(flatbuffers::FlatBufferBuilder &_fbb, const SpectralT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const SpectralT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _Treal = _o->Treal;
+  auto _Tcomplex = _o->Tcomplex;
+  auto _fft_length = _o->fft_length;
+  return MNN::CreateSpectral(
+      _fbb,
+      _Treal,
+      _Tcomplex,
+      _fft_length);
+}
+
 inline const flatbuffers::TypeTable *BinaryOpOperationTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_CHAR, 0, 0 },
@@ -5638,6 +5756,26 @@ inline const flatbuffers::TypeTable *TensorArrayTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SpectralTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_INT, 0, 0 },
+    { flatbuffers::ET_INT, 0, 0 },
+    { flatbuffers::ET_INT, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    DataTypeTypeTable
+  };
+  static const char * const names[] = {
+    "Treal",
+    "Tcomplex",
+    "fft_length"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, names
   };
   return &tt;
 }

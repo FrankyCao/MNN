@@ -152,6 +152,11 @@ enum OpType : int {
     TensorArrayScatter = 138,
     TensorArraySplit = 139,
     TensorArrayConcat = 140,
+    
+    // Spectral Ops
+    Spectral = 180,
+    SpectralRFFT = 181,
+    SpectralIRFFT = 182,
 
     Plugin = 256, //The Type load from plugin
     //Training Op Start from 257
@@ -326,6 +331,7 @@ union OpParameter {
     RandomUniform,
     LayerNorm,
     TensorArray,
+    Spectral,
 }
 
 table Op {
