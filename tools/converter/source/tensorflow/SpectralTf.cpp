@@ -16,13 +16,11 @@ MNN::OpType SpectralRFFTTf::opType() {
     return MNN::OpType_SpectralRFFT;
 }
 MNN::OpParameter SpectralRFFTTf::type() {
-    return MNN::OpType_SpectralRFFT;
+    return MNN::OpParameter_Spectral;
 }
 
 void SpectralRFFTTf::run(MNN::OpT *dstOp, TmpNode *srcNode) {
-    auto spectral = new MNN::SpectralT;
-    
-
+    dstOp->main.value = nullptr;
 }
 
 REGISTER_CONVERTER(SpectralRFFTTf, RFFT);
@@ -34,12 +32,11 @@ MNN::OpType SpectralIRFFTTf::opType() {
     return MNN::OpType_SpectralIRFFT;
 }
 MNN::OpParameter SpectralIRFFTTf::type() {
-    return MNN::OpType_SpectralIRFFT;
+    return MNN::OpParameter_Spectral;
 }
 
 void SpectralIRFFTTf::run(MNN::OpT *dstOp, TmpNode *srcNode) {
-    
-
+    dstOp->main.value = nullptr;
 }
 
 REGISTER_CONVERTER(SpectralIRFFTTf, IRFFT);

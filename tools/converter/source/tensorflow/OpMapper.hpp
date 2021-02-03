@@ -128,6 +128,8 @@ const std::unordered_map<std::string, MNN::OpType> tfOp2MNNOp{
     {"TensorArrayWriteV3", MNN::OpType_TensorArrayWrite},
     {"TensorArrayGatherV3", MNN::OpType_TensorArrayGather},
     {"TensorArrayScatterV3", MNN::OpType_TensorArrayScatter},
+    {"RFFT", MNN::OpType_SpectralRFFT},
+    {"IRFFT", MNN::OpType_SpectralIRFFT},
 };
 
 #endif // OPMAPPER_HPP

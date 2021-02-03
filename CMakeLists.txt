@@ -26,6 +26,8 @@ add_definitions("-DMNN_VERSION_PATCH=${MNN_VERSION_PATCH}")
 
 # CMP0048 is related to letting CMake managing the package version for us
 
+set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "g++")
 cmake_policy(SET CMP0048 NEW)
 project(MNN VERSION ${MNN_VERSION_MAJOR}.${MNN_VERSION_MINOR}.${MNN_VERSION_PATCH}.${MNN_VERSION_BUILD} LANGUAGES C CXX ASM)
 # complier options
