@@ -305,7 +305,14 @@ table TensorArray {
     T:DataType=DT_FLOAT;
 }
 table Spectral {
-    Treal:DataType;
-    Tcomplex:DataType;
-    fft_length:int;
+
+}
+table PlaceholderWithDefault {
+     shape:DataType;
+}
+table TensorflowIf {
+     output_shapes:DataType;
+}
+table ComplexAbs {
+
 }

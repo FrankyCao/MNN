@@ -206,9 +206,11 @@ enum OpType {
   OpType_TensorArrayScatter = 138,
   OpType_TensorArraySplit = 139,
   OpType_TensorArrayConcat = 140,
-  OpType_Spectral = 180,
   OpType_SpectralRFFT = 181,
   OpType_SpectralIRFFT = 182,
+  OpType_PlaceholderWithDefault = 183,
+  OpType_TensorflowIf = 184,
+  OpType_ComplexAbs = 185,
   OpType_Plugin = 256,
   OpType_Select = 257,
   OpType_ZerosLike = 258,
@@ -236,7 +238,7 @@ enum OpType {
   OpType_MAX = OpType_LayerNorm
 };
 
-inline const OpType (&EnumValuesOpType())[161] {
+inline const OpType (&EnumValuesOpType())[163] {
   static const OpType values[] = {
     OpType_AbsVal,
     OpType_QuantizedAdd,
@@ -373,9 +375,11 @@ inline const OpType (&EnumValuesOpType())[161] {
     OpType_TensorArrayScatter,
     OpType_TensorArraySplit,
     OpType_TensorArrayConcat,
-    OpType_Spectral,
     OpType_SpectralRFFT,
     OpType_SpectralIRFFT,
+    OpType_PlaceholderWithDefault,
+    OpType_TensorflowIf,
+    OpType_ComplexAbs,
     OpType_Plugin,
     OpType_Select,
     OpType_ZerosLike,
@@ -585,12 +589,12 @@ inline const char * const *EnumNamesOpType() {
     "",
     "",
     "",
-    "Spectral",
+    "",
     "SpectralRFFT",
     "SpectralIRFFT",
-    "",
-    "",
-    "",
+    "PlaceholderWithDefault",
+    "TensorflowIf",
+    "ComplexAbs",
     "",
     "",
     "",
@@ -1112,11 +1116,14 @@ enum OpParameter {
   OpParameter_LayerNorm = 88,
   OpParameter_TensorArray = 89,
   OpParameter_Spectral = 90,
+  OpParameter_PlaceholderWithDefault = 91,
+  OpParameter_TensorflowIf = 92,
+  OpParameter_ComplexAbs = 93,
   OpParameter_MIN = OpParameter_NONE,
-  OpParameter_MAX = OpParameter_Spectral
+  OpParameter_MAX = OpParameter_ComplexAbs
 };
 
-inline const OpParameter (&EnumValuesOpParameter())[91] {
+inline const OpParameter (&EnumValuesOpParameter())[94] {
   static const OpParameter values[] = {
     OpParameter_NONE,
     OpParameter_QuantizedAdd,
@@ -1208,7 +1215,10 @@ inline const OpParameter (&EnumValuesOpParameter())[91] {
     OpParameter_RandomUniform,
     OpParameter_LayerNorm,
     OpParameter_TensorArray,
-    OpParameter_Spectral
+    OpParameter_Spectral,
+    OpParameter_PlaceholderWithDefault,
+    OpParameter_TensorflowIf,
+    OpParameter_ComplexAbs
   };
   return values;
 }
@@ -1306,13 +1316,16 @@ inline const char * const *EnumNamesOpParameter() {
     "LayerNorm",
     "TensorArray",
     "Spectral",
+    "PlaceholderWithDefault",
+    "TensorflowIf",
+    "ComplexAbs",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameOpParameter(OpParameter e) {
-  if (e < OpParameter_NONE || e > OpParameter_Spectral) return "";
+  if (e < OpParameter_NONE || e > OpParameter_ComplexAbs) return "";
   const size_t index = static_cast<int>(e);
   return EnumNamesOpParameter()[index];
 }
@@ -1679,6 +1692,18 @@ template<> struct OpParameterTraits<TensorArray> {
 
 template<> struct OpParameterTraits<Spectral> {
   static const OpParameter enum_value = OpParameter_Spectral;
+};
+
+template<> struct OpParameterTraits<PlaceholderWithDefault> {
+  static const OpParameter enum_value = OpParameter_PlaceholderWithDefault;
+};
+
+template<> struct OpParameterTraits<TensorflowIf> {
+  static const OpParameter enum_value = OpParameter_TensorflowIf;
+};
+
+template<> struct OpParameterTraits<ComplexAbs> {
+  static const OpParameter enum_value = OpParameter_ComplexAbs;
 };
 
 struct OpParameterUnion {
@@ -2431,6 +2456,30 @@ struct OpParameterUnion {
   const SpectralT *AsSpectral() const {
     return type == OpParameter_Spectral ?
       reinterpret_cast<const SpectralT *>(value) : nullptr;
+  }
+  PlaceholderWithDefaultT *AsPlaceholderWithDefault() {
+    return type == OpParameter_PlaceholderWithDefault ?
+      reinterpret_cast<PlaceholderWithDefaultT *>(value) : nullptr;
+  }
+  const PlaceholderWithDefaultT *AsPlaceholderWithDefault() const {
+    return type == OpParameter_PlaceholderWithDefault ?
+      reinterpret_cast<const PlaceholderWithDefaultT *>(value) : nullptr;
+  }
+  TensorflowIfT *AsTensorflowIf() {
+    return type == OpParameter_TensorflowIf ?
+      reinterpret_cast<TensorflowIfT *>(value) : nullptr;
+  }
+  const TensorflowIfT *AsTensorflowIf() const {
+    return type == OpParameter_TensorflowIf ?
+      reinterpret_cast<const TensorflowIfT *>(value) : nullptr;
+  }
+  ComplexAbsT *AsComplexAbs() {
+    return type == OpParameter_ComplexAbs ?
+      reinterpret_cast<ComplexAbsT *>(value) : nullptr;
+  }
+  const ComplexAbsT *AsComplexAbs() const {
+    return type == OpParameter_ComplexAbs ?
+      reinterpret_cast<const ComplexAbsT *>(value) : nullptr;
   }
 };
 
@@ -3320,6 +3369,15 @@ struct Op FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const Spectral *main_as_Spectral() const {
     return main_type() == OpParameter_Spectral ? static_cast<const Spectral *>(main()) : nullptr;
   }
+  const PlaceholderWithDefault *main_as_PlaceholderWithDefault() const {
+    return main_type() == OpParameter_PlaceholderWithDefault ? static_cast<const PlaceholderWithDefault *>(main()) : nullptr;
+  }
+  const TensorflowIf *main_as_TensorflowIf() const {
+    return main_type() == OpParameter_TensorflowIf ? static_cast<const TensorflowIf *>(main()) : nullptr;
+  }
+  const ComplexAbs *main_as_ComplexAbs() const {
+    return main_type() == OpParameter_ComplexAbs ? static_cast<const ComplexAbs *>(main()) : nullptr;
+  }
   const flatbuffers::String *name() const {
     return GetPointer<const flatbuffers::String *>(VT_NAME);
   }
@@ -3710,6 +3768,18 @@ template<> inline const TensorArray *Op::main_as<TensorArray>() const {
 
 template<> inline const Spectral *Op::main_as<Spectral>() const {
   return main_as_Spectral();
+}
+
+template<> inline const PlaceholderWithDefault *Op::main_as<PlaceholderWithDefault>() const {
+  return main_as_PlaceholderWithDefault();
+}
+
+template<> inline const TensorflowIf *Op::main_as<TensorflowIf>() const {
+  return main_as_TensorflowIf();
+}
+
+template<> inline const ComplexAbs *Op::main_as<ComplexAbs>() const {
+  return main_as_ComplexAbs();
 }
 
 struct OpBuilder {
@@ -5200,6 +5270,18 @@ inline bool VerifyOpParameter(flatbuffers::Verifier &verifier, const void *obj, 
       auto ptr = reinterpret_cast<const Spectral *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case OpParameter_PlaceholderWithDefault: {
+      auto ptr = reinterpret_cast<const PlaceholderWithDefault *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParameter_TensorflowIf: {
+      auto ptr = reinterpret_cast<const TensorflowIf *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParameter_ComplexAbs: {
+      auto ptr = reinterpret_cast<const ComplexAbs *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     default: return false;
   }
 }
@@ -5578,6 +5660,18 @@ inline void *OpParameterUnion::UnPack(const void *obj, OpParameter type, const f
       auto ptr = reinterpret_cast<const Spectral *>(obj);
       return ptr->UnPack(resolver);
     }
+    case OpParameter_PlaceholderWithDefault: {
+      auto ptr = reinterpret_cast<const PlaceholderWithDefault *>(obj);
+      return ptr->UnPack(resolver);
+    }
+    case OpParameter_TensorflowIf: {
+      auto ptr = reinterpret_cast<const TensorflowIf *>(obj);
+      return ptr->UnPack(resolver);
+    }
+    case OpParameter_ComplexAbs: {
+      auto ptr = reinterpret_cast<const ComplexAbs *>(obj);
+      return ptr->UnPack(resolver);
+    }
     default: return nullptr;
   }
 }
@@ -5944,6 +6038,18 @@ inline flatbuffers::Offset<void> OpParameterUnion::Pack(flatbuffers::FlatBufferB
       auto ptr = reinterpret_cast<const SpectralT *>(value);
       return CreateSpectral(_fbb, ptr, _rehasher).Union();
     }
+    case OpParameter_PlaceholderWithDefault: {
+      auto ptr = reinterpret_cast<const PlaceholderWithDefaultT *>(value);
+      return CreatePlaceholderWithDefault(_fbb, ptr, _rehasher).Union();
+    }
+    case OpParameter_TensorflowIf: {
+      auto ptr = reinterpret_cast<const TensorflowIfT *>(value);
+      return CreateTensorflowIf(_fbb, ptr, _rehasher).Union();
+    }
+    case OpParameter_ComplexAbs: {
+      auto ptr = reinterpret_cast<const ComplexAbsT *>(value);
+      return CreateComplexAbs(_fbb, ptr, _rehasher).Union();
+    }
     default: return 0;
   }
 }
@@ -6308,6 +6414,18 @@ inline OpParameterUnion::OpParameterUnion(const OpParameterUnion &u) FLATBUFFERS
     }
     case OpParameter_Spectral: {
       value = new SpectralT(*reinterpret_cast<SpectralT *>(u.value));
+      break;
+    }
+    case OpParameter_PlaceholderWithDefault: {
+      value = new PlaceholderWithDefaultT(*reinterpret_cast<PlaceholderWithDefaultT *>(u.value));
+      break;
+    }
+    case OpParameter_TensorflowIf: {
+      value = new TensorflowIfT(*reinterpret_cast<TensorflowIfT *>(u.value));
+      break;
+    }
+    case OpParameter_ComplexAbs: {
+      value = new ComplexAbsT(*reinterpret_cast<ComplexAbsT *>(u.value));
       break;
     }
     default:
@@ -6767,6 +6885,21 @@ inline void OpParameterUnion::Reset() {
       delete ptr;
       break;
     }
+    case OpParameter_PlaceholderWithDefault: {
+      auto ptr = reinterpret_cast<PlaceholderWithDefaultT *>(value);
+      delete ptr;
+      break;
+    }
+    case OpParameter_TensorflowIf: {
+      auto ptr = reinterpret_cast<TensorflowIfT *>(value);
+      delete ptr;
+      break;
+    }
+    case OpParameter_ComplexAbs: {
+      auto ptr = reinterpret_cast<ComplexAbsT *>(value);
+      delete ptr;
+      break;
+    }
     default: break;
   }
   value = nullptr;
@@ -6935,12 +7068,14 @@ inline const flatbuffers::TypeTable *OpTypeTypeTable() {
     { flatbuffers::ET_INT, 0, 0 },
     { flatbuffers::ET_INT, 0, 0 },
     { flatbuffers::ET_INT, 0, 0 },
+    { flatbuffers::ET_INT, 0, 0 },
+    { flatbuffers::ET_INT, 0, 0 },
     { flatbuffers::ET_INT, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     OpTypeTypeTable
   };
-  static const int64_t values[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 180, 181, 182, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 512, 513, 514, 515, 516, 517, 518, 600, 601, 603 };
+  static const int64_t values[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 181, 182, 183, 184, 185, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 512, 513, 514, 515, 516, 517, 518, 600, 601, 603 };
   static const char * const names[] = {
     "AbsVal",
     "QuantizedAdd",
@@ -7077,9 +7212,11 @@ inline const flatbuffers::TypeTable *OpTypeTypeTable() {
     "TensorArrayScatter",
     "TensorArraySplit",
     "TensorArrayConcat",
-    "Spectral",
     "SpectralRFFT",
     "SpectralIRFFT",
+    "PlaceholderWithDefault",
+    "TensorflowIf",
+    "ComplexAbs",
     "Plugin",
     "Select",
     "ZerosLike",
@@ -7105,7 +7242,7 @@ inline const flatbuffers::TypeTable *OpTypeTypeTable() {
     "LayerNorm"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_ENUM, 161, type_codes, type_refs, values, names
+    flatbuffers::ST_ENUM, 163, type_codes, type_refs, values, names
   };
   return &tt;
 }
@@ -7202,7 +7339,10 @@ inline const flatbuffers::TypeTable *OpParameterTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 86 },
     { flatbuffers::ET_SEQUENCE, 0, 87 },
     { flatbuffers::ET_SEQUENCE, 0, 88 },
-    { flatbuffers::ET_SEQUENCE, 0, 89 }
+    { flatbuffers::ET_SEQUENCE, 0, 89 },
+    { flatbuffers::ET_SEQUENCE, 0, 90 },
+    { flatbuffers::ET_SEQUENCE, 0, 91 },
+    { flatbuffers::ET_SEQUENCE, 0, 92 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     QuantizedAddTypeTable,
@@ -7294,7 +7434,10 @@ inline const flatbuffers::TypeTable *OpParameterTypeTable() {
     RandomUniformTypeTable,
     LayerNormTypeTable,
     TensorArrayTypeTable,
-    SpectralTypeTable
+    SpectralTypeTable,
+    PlaceholderWithDefaultTypeTable,
+    TensorflowIfTypeTable,
+    ComplexAbsTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -7387,10 +7530,13 @@ inline const flatbuffers::TypeTable *OpParameterTypeTable() {
     "RandomUniform",
     "LayerNorm",
     "TensorArray",
-    "Spectral"
+    "Spectral",
+    "PlaceholderWithDefault",
+    "TensorflowIf",
+    "ComplexAbs"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 91, type_codes, type_refs, nullptr, names
+    flatbuffers::ST_UNION, 94, type_codes, type_refs, nullptr, names
   };
   return &tt;
 }

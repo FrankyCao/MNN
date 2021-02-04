@@ -21,7 +21,7 @@ public:
         int rank = 1;
         auto input0 = inputs[0];
         auto input1 = inputs[1];
-        MNN_ASSERT(input0->dimensions() >= rank);
+        MNN_ASSERT(input0->dimensions() >= rank || input0->dimensions() == -1);
         MNN_ASSERT(input1->dimensions() == 1);
         MNN_ASSERT(input1->length(0) == rank);
         
