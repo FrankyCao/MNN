@@ -209,8 +209,8 @@ enum OpType {
   OpType_SpectralRFFT = 181,
   OpType_SpectralIRFFT = 182,
   OpType_PlaceholderWithDefault = 183,
-  OpType_TensorflowIf = 184,
-  OpType_ComplexAbs = 185,
+  OpType_ComplexAbs = 184,
+  OpType_TFIf = 185,
   OpType_Plugin = 256,
   OpType_Select = 257,
   OpType_ZerosLike = 258,
@@ -378,8 +378,8 @@ inline const OpType (&EnumValuesOpType())[163] {
     OpType_SpectralRFFT,
     OpType_SpectralIRFFT,
     OpType_PlaceholderWithDefault,
-    OpType_TensorflowIf,
     OpType_ComplexAbs,
+    OpType_TFIf,
     OpType_Plugin,
     OpType_Select,
     OpType_ZerosLike,
@@ -593,8 +593,8 @@ inline const char * const *EnumNamesOpType() {
     "SpectralRFFT",
     "SpectralIRFFT",
     "PlaceholderWithDefault",
-    "TensorflowIf",
     "ComplexAbs",
+    "TFIf",
     "",
     "",
     "",
@@ -1117,10 +1117,10 @@ enum OpParameter {
   OpParameter_TensorArray = 89,
   OpParameter_Spectral = 90,
   OpParameter_PlaceholderWithDefault = 91,
-  OpParameter_TensorflowIf = 92,
-  OpParameter_ComplexAbs = 93,
+  OpParameter_ComplexAbs = 92,
+  OpParameter_TFIf = 93,
   OpParameter_MIN = OpParameter_NONE,
-  OpParameter_MAX = OpParameter_ComplexAbs
+  OpParameter_MAX = OpParameter_TFIf
 };
 
 inline const OpParameter (&EnumValuesOpParameter())[94] {
@@ -1217,8 +1217,8 @@ inline const OpParameter (&EnumValuesOpParameter())[94] {
     OpParameter_TensorArray,
     OpParameter_Spectral,
     OpParameter_PlaceholderWithDefault,
-    OpParameter_TensorflowIf,
-    OpParameter_ComplexAbs
+    OpParameter_ComplexAbs,
+    OpParameter_TFIf
   };
   return values;
 }
@@ -1317,15 +1317,15 @@ inline const char * const *EnumNamesOpParameter() {
     "TensorArray",
     "Spectral",
     "PlaceholderWithDefault",
-    "TensorflowIf",
     "ComplexAbs",
+    "TFIf",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameOpParameter(OpParameter e) {
-  if (e < OpParameter_NONE || e > OpParameter_ComplexAbs) return "";
+  if (e < OpParameter_NONE || e > OpParameter_TFIf) return "";
   const size_t index = static_cast<int>(e);
   return EnumNamesOpParameter()[index];
 }
@@ -1698,12 +1698,12 @@ template<> struct OpParameterTraits<PlaceholderWithDefault> {
   static const OpParameter enum_value = OpParameter_PlaceholderWithDefault;
 };
 
-template<> struct OpParameterTraits<TensorflowIf> {
-  static const OpParameter enum_value = OpParameter_TensorflowIf;
-};
-
 template<> struct OpParameterTraits<ComplexAbs> {
   static const OpParameter enum_value = OpParameter_ComplexAbs;
+};
+
+template<> struct OpParameterTraits<TFIf> {
+  static const OpParameter enum_value = OpParameter_TFIf;
 };
 
 struct OpParameterUnion {
@@ -2465,14 +2465,6 @@ struct OpParameterUnion {
     return type == OpParameter_PlaceholderWithDefault ?
       reinterpret_cast<const PlaceholderWithDefaultT *>(value) : nullptr;
   }
-  TensorflowIfT *AsTensorflowIf() {
-    return type == OpParameter_TensorflowIf ?
-      reinterpret_cast<TensorflowIfT *>(value) : nullptr;
-  }
-  const TensorflowIfT *AsTensorflowIf() const {
-    return type == OpParameter_TensorflowIf ?
-      reinterpret_cast<const TensorflowIfT *>(value) : nullptr;
-  }
   ComplexAbsT *AsComplexAbs() {
     return type == OpParameter_ComplexAbs ?
       reinterpret_cast<ComplexAbsT *>(value) : nullptr;
@@ -2480,6 +2472,14 @@ struct OpParameterUnion {
   const ComplexAbsT *AsComplexAbs() const {
     return type == OpParameter_ComplexAbs ?
       reinterpret_cast<const ComplexAbsT *>(value) : nullptr;
+  }
+  TFIfT *AsTFIf() {
+    return type == OpParameter_TFIf ?
+      reinterpret_cast<TFIfT *>(value) : nullptr;
+  }
+  const TFIfT *AsTFIf() const {
+    return type == OpParameter_TFIf ?
+      reinterpret_cast<const TFIfT *>(value) : nullptr;
   }
 };
 
@@ -3372,11 +3372,11 @@ struct Op FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const PlaceholderWithDefault *main_as_PlaceholderWithDefault() const {
     return main_type() == OpParameter_PlaceholderWithDefault ? static_cast<const PlaceholderWithDefault *>(main()) : nullptr;
   }
-  const TensorflowIf *main_as_TensorflowIf() const {
-    return main_type() == OpParameter_TensorflowIf ? static_cast<const TensorflowIf *>(main()) : nullptr;
-  }
   const ComplexAbs *main_as_ComplexAbs() const {
     return main_type() == OpParameter_ComplexAbs ? static_cast<const ComplexAbs *>(main()) : nullptr;
+  }
+  const TFIf *main_as_TFIf() const {
+    return main_type() == OpParameter_TFIf ? static_cast<const TFIf *>(main()) : nullptr;
   }
   const flatbuffers::String *name() const {
     return GetPointer<const flatbuffers::String *>(VT_NAME);
@@ -3774,12 +3774,12 @@ template<> inline const PlaceholderWithDefault *Op::main_as<PlaceholderWithDefau
   return main_as_PlaceholderWithDefault();
 }
 
-template<> inline const TensorflowIf *Op::main_as<TensorflowIf>() const {
-  return main_as_TensorflowIf();
-}
-
 template<> inline const ComplexAbs *Op::main_as<ComplexAbs>() const {
   return main_as_ComplexAbs();
+}
+
+template<> inline const TFIf *Op::main_as<TFIf>() const {
+  return main_as_TFIf();
 }
 
 struct OpBuilder {
@@ -5274,12 +5274,12 @@ inline bool VerifyOpParameter(flatbuffers::Verifier &verifier, const void *obj, 
       auto ptr = reinterpret_cast<const PlaceholderWithDefault *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case OpParameter_TensorflowIf: {
-      auto ptr = reinterpret_cast<const TensorflowIf *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
     case OpParameter_ComplexAbs: {
       auto ptr = reinterpret_cast<const ComplexAbs *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParameter_TFIf: {
+      auto ptr = reinterpret_cast<const TFIf *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return false;
@@ -5664,12 +5664,12 @@ inline void *OpParameterUnion::UnPack(const void *obj, OpParameter type, const f
       auto ptr = reinterpret_cast<const PlaceholderWithDefault *>(obj);
       return ptr->UnPack(resolver);
     }
-    case OpParameter_TensorflowIf: {
-      auto ptr = reinterpret_cast<const TensorflowIf *>(obj);
-      return ptr->UnPack(resolver);
-    }
     case OpParameter_ComplexAbs: {
       auto ptr = reinterpret_cast<const ComplexAbs *>(obj);
+      return ptr->UnPack(resolver);
+    }
+    case OpParameter_TFIf: {
+      auto ptr = reinterpret_cast<const TFIf *>(obj);
       return ptr->UnPack(resolver);
     }
     default: return nullptr;
@@ -6042,13 +6042,13 @@ inline flatbuffers::Offset<void> OpParameterUnion::Pack(flatbuffers::FlatBufferB
       auto ptr = reinterpret_cast<const PlaceholderWithDefaultT *>(value);
       return CreatePlaceholderWithDefault(_fbb, ptr, _rehasher).Union();
     }
-    case OpParameter_TensorflowIf: {
-      auto ptr = reinterpret_cast<const TensorflowIfT *>(value);
-      return CreateTensorflowIf(_fbb, ptr, _rehasher).Union();
-    }
     case OpParameter_ComplexAbs: {
       auto ptr = reinterpret_cast<const ComplexAbsT *>(value);
       return CreateComplexAbs(_fbb, ptr, _rehasher).Union();
+    }
+    case OpParameter_TFIf: {
+      auto ptr = reinterpret_cast<const TFIfT *>(value);
+      return CreateTFIf(_fbb, ptr, _rehasher).Union();
     }
     default: return 0;
   }
@@ -6420,12 +6420,12 @@ inline OpParameterUnion::OpParameterUnion(const OpParameterUnion &u) FLATBUFFERS
       value = new PlaceholderWithDefaultT(*reinterpret_cast<PlaceholderWithDefaultT *>(u.value));
       break;
     }
-    case OpParameter_TensorflowIf: {
-      value = new TensorflowIfT(*reinterpret_cast<TensorflowIfT *>(u.value));
-      break;
-    }
     case OpParameter_ComplexAbs: {
       value = new ComplexAbsT(*reinterpret_cast<ComplexAbsT *>(u.value));
+      break;
+    }
+    case OpParameter_TFIf: {
+      value = new TFIfT(*reinterpret_cast<TFIfT *>(u.value));
       break;
     }
     default:
@@ -6890,13 +6890,13 @@ inline void OpParameterUnion::Reset() {
       delete ptr;
       break;
     }
-    case OpParameter_TensorflowIf: {
-      auto ptr = reinterpret_cast<TensorflowIfT *>(value);
+    case OpParameter_ComplexAbs: {
+      auto ptr = reinterpret_cast<ComplexAbsT *>(value);
       delete ptr;
       break;
     }
-    case OpParameter_ComplexAbs: {
-      auto ptr = reinterpret_cast<ComplexAbsT *>(value);
+    case OpParameter_TFIf: {
+      auto ptr = reinterpret_cast<TFIfT *>(value);
       delete ptr;
       break;
     }
@@ -7215,8 +7215,8 @@ inline const flatbuffers::TypeTable *OpTypeTypeTable() {
     "SpectralRFFT",
     "SpectralIRFFT",
     "PlaceholderWithDefault",
-    "TensorflowIf",
     "ComplexAbs",
+    "TFIf",
     "Plugin",
     "Select",
     "ZerosLike",
@@ -7436,8 +7436,8 @@ inline const flatbuffers::TypeTable *OpParameterTypeTable() {
     TensorArrayTypeTable,
     SpectralTypeTable,
     PlaceholderWithDefaultTypeTable,
-    TensorflowIfTypeTable,
-    ComplexAbsTypeTable
+    ComplexAbsTypeTable,
+    TFIfTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -7532,8 +7532,8 @@ inline const flatbuffers::TypeTable *OpParameterTypeTable() {
     "TensorArray",
     "Spectral",
     "PlaceholderWithDefault",
-    "TensorflowIf",
-    "ComplexAbs"
+    "ComplexAbs",
+    "TFIf"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_UNION, 94, type_codes, type_refs, nullptr, names

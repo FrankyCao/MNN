@@ -130,6 +130,8 @@ const std::unordered_map<std::string, MNN::OpType> tfOp2MNNOp{
     {"TensorArrayScatterV3", MNN::OpType_TensorArrayScatter},
     {"RFFT", MNN::OpType_SpectralRFFT},
     {"IRFFT", MNN::OpType_SpectralIRFFT},
+    {"PlaceholderWithDefault", MNN::OpType_PlaceholderWithDefault},
+    {"ComplexAbs",MNN::OpType_ComplexAbs},
 };
 
 #endif // OPMAPPER_HPP

@@ -308,11 +308,13 @@ table Spectral {
 
 }
 table PlaceholderWithDefault {
-     shape:DataType;
-}
-table TensorflowIf {
-     output_shapes:DataType;
+     T:DataType=DT_FLOAT;
+     shape:[int];
 }
 table ComplexAbs {
 
+}
+table TFIf {
+    then_branch:string;
+    else_branch:string;
 }

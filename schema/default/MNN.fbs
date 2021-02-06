@@ -157,8 +157,8 @@ enum OpType : int {
     SpectralIRFFT = 182,
     
     PlaceholderWithDefault = 183,
-    TensorflowIf = 184,
-    ComplexAbs = 185,
+    ComplexAbs = 184,
+    TFIf = 185,
 
     Plugin = 256, //The Type load from plugin
     //Training Op Start from 257
@@ -335,8 +335,8 @@ union OpParameter {
     TensorArray,
     Spectral,
     PlaceholderWithDefault,
-    TensorflowIf,
     ComplexAbs,
+    TFIf,
 }
 
 table Op {

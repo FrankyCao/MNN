@@ -127,11 +127,11 @@ struct SpectralT;
 struct PlaceholderWithDefault;
 struct PlaceholderWithDefaultT;
 
-struct TensorflowIf;
-struct TensorflowIfT;
-
 struct ComplexAbs;
 struct ComplexAbsT;
+
+struct TFIf;
+struct TFIfT;
 
 inline const flatbuffers::TypeTable *BinaryOpTypeTable();
 
@@ -211,9 +211,9 @@ inline const flatbuffers::TypeTable *SpectralTypeTable();
 
 inline const flatbuffers::TypeTable *PlaceholderWithDefaultTypeTable();
 
-inline const flatbuffers::TypeTable *TensorflowIfTypeTable();
-
 inline const flatbuffers::TypeTable *ComplexAbsTypeTable();
+
+inline const flatbuffers::TypeTable *TFIfTypeTable();
 
 enum BinaryOpOperation {
   BinaryOpOperation_ADD = 0,
@@ -3648,9 +3648,10 @@ flatbuffers::Offset<Spectral> CreateSpectral(flatbuffers::FlatBufferBuilder &_fb
 
 struct PlaceholderWithDefaultT : public flatbuffers::NativeTable {
   typedef PlaceholderWithDefault TableType;
-  DataType shape;
+  DataType T;
+  std::vector<int32_t> shape;
   PlaceholderWithDefaultT()
-      : shape(DataType_DT_INVALID) {
+      : T(DataType_DT_FLOAT) {
   }
 };
 
@@ -3660,14 +3661,20 @@ struct PlaceholderWithDefault FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
     return PlaceholderWithDefaultTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_SHAPE = 4
+    VT_T = 4,
+    VT_SHAPE = 6
   };
-  DataType shape() const {
-    return static_cast<DataType>(GetField<int32_t>(VT_SHAPE, 0));
+  DataType T() const {
+    return static_cast<DataType>(GetField<int32_t>(VT_T, 1));
+  }
+  const flatbuffers::Vector<int32_t> *shape() const {
+    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_SHAPE);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_SHAPE) &&
+           VerifyField<int32_t>(verifier, VT_T) &&
+           VerifyOffset(verifier, VT_SHAPE) &&
+           verifier.VerifyVector(shape()) &&
            verifier.EndTable();
   }
   PlaceholderWithDefaultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -3678,8 +3685,11 @@ struct PlaceholderWithDefault FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
 struct PlaceholderWithDefaultBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_shape(DataType shape) {
-    fbb_.AddElement<int32_t>(PlaceholderWithDefault::VT_SHAPE, static_cast<int32_t>(shape), 0);
+  void add_T(DataType T) {
+    fbb_.AddElement<int32_t>(PlaceholderWithDefault::VT_T, static_cast<int32_t>(T), 1);
+  }
+  void add_shape(flatbuffers::Offset<flatbuffers::Vector<int32_t>> shape) {
+    fbb_.AddOffset(PlaceholderWithDefault::VT_SHAPE, shape);
   }
   explicit PlaceholderWithDefaultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -3695,70 +3705,26 @@ struct PlaceholderWithDefaultBuilder {
 
 inline flatbuffers::Offset<PlaceholderWithDefault> CreatePlaceholderWithDefault(
     flatbuffers::FlatBufferBuilder &_fbb,
-    DataType shape = DataType_DT_INVALID) {
+    DataType T = DataType_DT_FLOAT,
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> shape = 0) {
   PlaceholderWithDefaultBuilder builder_(_fbb);
   builder_.add_shape(shape);
+  builder_.add_T(T);
   return builder_.Finish();
+}
+
+inline flatbuffers::Offset<PlaceholderWithDefault> CreatePlaceholderWithDefaultDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    DataType T = DataType_DT_FLOAT,
+    const std::vector<int32_t> *shape = nullptr) {
+  auto shape__ = shape ? _fbb.CreateVector<int32_t>(*shape) : 0;
+  return MNN::CreatePlaceholderWithDefault(
+      _fbb,
+      T,
+      shape__);
 }
 
 flatbuffers::Offset<PlaceholderWithDefault> CreatePlaceholderWithDefault(flatbuffers::FlatBufferBuilder &_fbb, const PlaceholderWithDefaultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct TensorflowIfT : public flatbuffers::NativeTable {
-  typedef TensorflowIf TableType;
-  DataType output_shapes;
-  TensorflowIfT()
-      : output_shapes(DataType_DT_INVALID) {
-  }
-};
-
-struct TensorflowIf FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef TensorflowIfT NativeTableType;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return TensorflowIfTypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_OUTPUT_SHAPES = 4
-  };
-  DataType output_shapes() const {
-    return static_cast<DataType>(GetField<int32_t>(VT_OUTPUT_SHAPES, 0));
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_OUTPUT_SHAPES) &&
-           verifier.EndTable();
-  }
-  TensorflowIfT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(TensorflowIfT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<TensorflowIf> Pack(flatbuffers::FlatBufferBuilder &_fbb, const TensorflowIfT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct TensorflowIfBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_output_shapes(DataType output_shapes) {
-    fbb_.AddElement<int32_t>(TensorflowIf::VT_OUTPUT_SHAPES, static_cast<int32_t>(output_shapes), 0);
-  }
-  explicit TensorflowIfBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  TensorflowIfBuilder &operator=(const TensorflowIfBuilder &);
-  flatbuffers::Offset<TensorflowIf> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<TensorflowIf>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<TensorflowIf> CreateTensorflowIf(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    DataType output_shapes = DataType_DT_INVALID) {
-  TensorflowIfBuilder builder_(_fbb);
-  builder_.add_output_shapes(output_shapes);
-  return builder_.Finish();
-}
-
-flatbuffers::Offset<TensorflowIf> CreateTensorflowIf(flatbuffers::FlatBufferBuilder &_fbb, const TensorflowIfT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct ComplexAbsT : public flatbuffers::NativeTable {
   typedef ComplexAbs TableType;
@@ -3802,6 +3768,87 @@ inline flatbuffers::Offset<ComplexAbs> CreateComplexAbs(
 }
 
 flatbuffers::Offset<ComplexAbs> CreateComplexAbs(flatbuffers::FlatBufferBuilder &_fbb, const ComplexAbsT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct TFIfT : public flatbuffers::NativeTable {
+  typedef TFIf TableType;
+  std::string then_branch;
+  std::string else_branch;
+  TFIfT() {
+  }
+};
+
+struct TFIf FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef TFIfT NativeTableType;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return TFIfTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_THEN_BRANCH = 4,
+    VT_ELSE_BRANCH = 6
+  };
+  const flatbuffers::String *then_branch() const {
+    return GetPointer<const flatbuffers::String *>(VT_THEN_BRANCH);
+  }
+  const flatbuffers::String *else_branch() const {
+    return GetPointer<const flatbuffers::String *>(VT_ELSE_BRANCH);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_THEN_BRANCH) &&
+           verifier.VerifyString(then_branch()) &&
+           VerifyOffset(verifier, VT_ELSE_BRANCH) &&
+           verifier.VerifyString(else_branch()) &&
+           verifier.EndTable();
+  }
+  TFIfT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(TFIfT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static flatbuffers::Offset<TFIf> Pack(flatbuffers::FlatBufferBuilder &_fbb, const TFIfT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct TFIfBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_then_branch(flatbuffers::Offset<flatbuffers::String> then_branch) {
+    fbb_.AddOffset(TFIf::VT_THEN_BRANCH, then_branch);
+  }
+  void add_else_branch(flatbuffers::Offset<flatbuffers::String> else_branch) {
+    fbb_.AddOffset(TFIf::VT_ELSE_BRANCH, else_branch);
+  }
+  explicit TFIfBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  TFIfBuilder &operator=(const TFIfBuilder &);
+  flatbuffers::Offset<TFIf> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<TFIf>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<TFIf> CreateTFIf(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> then_branch = 0,
+    flatbuffers::Offset<flatbuffers::String> else_branch = 0) {
+  TFIfBuilder builder_(_fbb);
+  builder_.add_else_branch(else_branch);
+  builder_.add_then_branch(then_branch);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<TFIf> CreateTFIfDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *then_branch = nullptr,
+    const char *else_branch = nullptr) {
+  auto then_branch__ = then_branch ? _fbb.CreateString(then_branch) : 0;
+  auto else_branch__ = else_branch ? _fbb.CreateString(else_branch) : 0;
+  return MNN::CreateTFIf(
+      _fbb,
+      then_branch__,
+      else_branch__);
+}
+
+flatbuffers::Offset<TFIf> CreateTFIf(flatbuffers::FlatBufferBuilder &_fbb, const TFIfT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 inline BinaryOpT *BinaryOp::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
   auto _o = new BinaryOpT();
@@ -4992,7 +5039,8 @@ inline PlaceholderWithDefaultT *PlaceholderWithDefault::UnPack(const flatbuffers
 inline void PlaceholderWithDefault::UnPackTo(PlaceholderWithDefaultT *_o, const flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = shape(); _o->shape = _e; };
+  { auto _e = T(); _o->T = _e; };
+  { auto _e = shape(); if (_e) { _o->shape.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->shape[_i] = _e->Get(_i); } } };
 }
 
 inline flatbuffers::Offset<PlaceholderWithDefault> PlaceholderWithDefault::Pack(flatbuffers::FlatBufferBuilder &_fbb, const PlaceholderWithDefaultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -5003,36 +5051,12 @@ inline flatbuffers::Offset<PlaceholderWithDefault> CreatePlaceholderWithDefault(
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const PlaceholderWithDefaultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _shape = _o->shape;
+  auto _T = _o->T;
+  auto _shape = _o->shape.size() ? _fbb.CreateVector(_o->shape) : 0;
   return MNN::CreatePlaceholderWithDefault(
       _fbb,
+      _T,
       _shape);
-}
-
-inline TensorflowIfT *TensorflowIf::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new TensorflowIfT();
-  UnPackTo(_o, _resolver);
-  return _o;
-}
-
-inline void TensorflowIf::UnPackTo(TensorflowIfT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = output_shapes(); _o->output_shapes = _e; };
-}
-
-inline flatbuffers::Offset<TensorflowIf> TensorflowIf::Pack(flatbuffers::FlatBufferBuilder &_fbb, const TensorflowIfT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateTensorflowIf(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<TensorflowIf> CreateTensorflowIf(flatbuffers::FlatBufferBuilder &_fbb, const TensorflowIfT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const TensorflowIfT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _output_shapes = _o->output_shapes;
-  return MNN::CreateTensorflowIf(
-      _fbb,
-      _output_shapes);
 }
 
 inline ComplexAbsT *ComplexAbs::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
@@ -5056,6 +5080,35 @@ inline flatbuffers::Offset<ComplexAbs> CreateComplexAbs(flatbuffers::FlatBufferB
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const ComplexAbsT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   return MNN::CreateComplexAbs(
       _fbb);
+}
+
+inline TFIfT *TFIf::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = new TFIfT();
+  UnPackTo(_o, _resolver);
+  return _o;
+}
+
+inline void TFIf::UnPackTo(TFIfT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = then_branch(); if (_e) _o->then_branch = _e->str(); };
+  { auto _e = else_branch(); if (_e) _o->else_branch = _e->str(); };
+}
+
+inline flatbuffers::Offset<TFIf> TFIf::Pack(flatbuffers::FlatBufferBuilder &_fbb, const TFIfT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateTFIf(_fbb, _o, _rehasher);
+}
+
+inline flatbuffers::Offset<TFIf> CreateTFIf(flatbuffers::FlatBufferBuilder &_fbb, const TFIfT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const TFIfT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _then_branch = _o->then_branch.empty() ? 0 : _fbb.CreateString(_o->then_branch);
+  auto _else_branch = _o->else_branch.empty() ? 0 : _fbb.CreateString(_o->else_branch);
+  return MNN::CreateTFIf(
+      _fbb,
+      _then_branch,
+      _else_branch);
 }
 
 inline const flatbuffers::TypeTable *BinaryOpOperationTypeTable() {
@@ -5969,32 +6022,18 @@ inline const flatbuffers::TypeTable *SpectralTypeTable() {
 
 inline const flatbuffers::TypeTable *PlaceholderWithDefaultTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_INT, 0, 0 }
+    { flatbuffers::ET_INT, 0, 0 },
+    { flatbuffers::ET_INT, 1, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     DataTypeTypeTable
   };
   static const char * const names[] = {
+    "T",
     "shape"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, names
-  };
-  return &tt;
-}
-
-inline const flatbuffers::TypeTable *TensorflowIfTypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_INT, 0, 0 }
-  };
-  static const flatbuffers::TypeFunction type_refs[] = {
-    DataTypeTypeTable
-  };
-  static const char * const names[] = {
-    "output_shapes"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, names
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, names
   };
   return &tt;
 }
@@ -6002,6 +6041,21 @@ inline const flatbuffers::TypeTable *TensorflowIfTypeTable() {
 inline const flatbuffers::TypeTable *ComplexAbsTypeTable() {
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 0, nullptr, nullptr, nullptr, nullptr
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *TFIfTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "then_branch",
+    "else_branch"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, names
   };
   return &tt;
 }

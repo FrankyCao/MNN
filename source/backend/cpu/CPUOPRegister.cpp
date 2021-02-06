@@ -72,6 +72,10 @@ extern void ___CPUPriorBoxCreator__OpType_PriorBox__();
 extern void ___CPUEltwiseInt8Creator__OpType_EltwiseInt8__();
 extern void ___CPUBatchMatMulCreator__OpType_BatchMatMul__();
 extern void ___CPULayerNormCreator__OpType_LayerNorm__();
+extern void ___CPUSpectralCreator__OpType_SpectralRFFT__();
+extern void ___CPUSpectralCreator__OpType_SpectralIRFFT__();
+extern void ___CPUPlaceholderWithDefaultCreator__OpType_PlaceholderWithDefault__();
+extern void ___CPUComplexAbsCreator__OpType_ComplexAbs__();
 
 void registerCPUOps() {
 ___CPUCropAndResizeCreator__OpType_CropAndResize__();
@@ -146,5 +150,9 @@ ___CPUPriorBoxCreator__OpType_PriorBox__();
 ___CPUEltwiseInt8Creator__OpType_EltwiseInt8__();
 ___CPUBatchMatMulCreator__OpType_BatchMatMul__();
 ___CPULayerNormCreator__OpType_LayerNorm__();
+___CPUSpectralCreator__OpType_SpectralRFFT__();
+___CPUSpectralCreator__OpType_SpectralIRFFT__();
+___CPUPlaceholderWithDefaultCreator__OpType_PlaceholderWithDefault__();
+___CPUComplexAbsCreator__OpType_ComplexAbs__();
 }
 }
